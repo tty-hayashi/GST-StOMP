@@ -11,97 +11,97 @@ Object subclass: MpConstants [
 
     MpConstants class >> array16 [
 	<category: 'typecodes'>
-	^220
+	^16rDC
     ]
 
     MpConstants class >> array32 [
 	<category: 'typecodes'>
-	^221
+	^16rDD
     ]
 
     MpConstants class >> double [
 	<category: 'typecodes'>
-	^203
+	^16rCB
     ]
 
     MpConstants class >> falseValue [
 	<category: 'typecodes'>
-	^194
+	^16rC2
     ]
 
     MpConstants class >> float [
 	<category: 'typecodes'>
-	^202
+	^16rCA
     ]
 
     MpConstants class >> int16 [
 	<category: 'typecodes'>
-	^209
+	^16rD1
     ]
 
     MpConstants class >> int32 [
 	<category: 'typecodes'>
-	^210
+	^16rD2
     ]
 
     MpConstants class >> int64 [
 	<category: 'typecodes'>
-	^211
+	^16rD3
     ]
 
     MpConstants class >> int8 [
 	<category: 'typecodes'>
-	^208
+	^16rD0
     ]
 
     MpConstants class >> map16 [
 	<category: 'typecodes'>
-	^222
+	^16rDE
     ]
 
     MpConstants class >> map32 [
 	<category: 'typecodes'>
-	^223
+	^16rDF
     ]
 
     MpConstants class >> nilValue [
 	<category: 'typecodes'>
-	^192
+	^16rC0
     ]
 
     MpConstants class >> raw16 [
 	<category: 'typecodes'>
-	^218
+	^16rDA
     ]
 
     MpConstants class >> raw32 [
 	<category: 'typecodes'>
-	^219
+	^16rDB
     ]
 
     MpConstants class >> trueValue [
 	<category: 'typecodes'>
-	^195
+	^16rC3
     ]
 
     MpConstants class >> uint16 [
 	<category: 'typecodes'>
-	^205
+	^16rCD
     ]
 
     MpConstants class >> uint32 [
 	<category: 'typecodes'>
-	^206
+	^16rCE
     ]
 
     MpConstants class >> uint64 [
 	<category: 'typecodes'>
-	^207
+	^16rCF
     ]
 
     MpConstants class >> uint8 [
 	<category: 'typecodes'>
-	^204
+	^16rCC
     ]
 ]
 
@@ -374,15 +374,15 @@ Object subclass: MpDecoder [
 
     readObjectOf: type ifNotApplied: aBlock [
 	<category: 'dispatching'>
-	type <= 191 
+	type <= 16rBF 
 	    ifTrue: 
 		[| fixMapOrArray |
-		type <= 127 ifTrue: [^self readPositiveFixNum: type].
+		type <= 16r7F ifTrue: [^self readPositiveFixNum: type].
 		fixMapOrArray := type bitShift: -4.
-		fixMapOrArray = 8 ifTrue: [^self readFixMap: type].
-		fixMapOrArray = 9 ifTrue: [^self readFixArray: type].
+		fixMapOrArray = 2r1000 ifTrue: [^self readFixMap: type].
+		fixMapOrArray = 2r1001 ifTrue: [^self readFixArray: type].
 		^self readFixRaw: type].
-	(type bitShift: -5) = 7 ifTrue: [^self readNegativeFixNum: type].
+	(type bitShift: -5) = 2r111 ifTrue: [^self readNegativeFixNum: type].
 	^self typeMapper readObjectOf: type ifNotApplied: aBlock
     ]
 
@@ -607,12 +607,12 @@ Object subclass: MpEncoder [
 
     writeArraySize: size [
 	<category: 'writing-helper'>
-	size < 16 ifTrue: [^self writeStream nextPut: (144 bitOr: size)].
-	size < 65536 
+	size < 16r10 ifTrue: [^self writeStream nextPut: (2r10010000 bitOr: size)].
+	size < 16r10000 
 	    ifTrue: 
 		[self writeStream nextPut: MpConstants array16.
 		^MpPortableUtil default writeUint16: size to: self writeStream].
-	size < 4294967296 
+	size < 16r100000000
 	    ifTrue: 
 		[self writeStream nextPut: MpConstants array32.
 		^MpPortableUtil default writeUint32: size to: self writeStream].
@@ -647,12 +647,12 @@ Object subclass: MpEncoder [
 
     writeMapSize: size [
 	<category: 'writing-helper'>
-	size < 16 ifTrue: [^self writeStream nextPut: (128 bitOr: size)].
-	size < 65536 
+	size < 16r10 ifTrue: [^self writeStream nextPut: (2r10000000 bitOr: size)].
+	size < 16r10000 
 	    ifTrue: 
 		[self writeStream nextPut: MpConstants map16.
 		^MpPortableUtil default writeUint16: size to: self writeStream].
-	size < 4294967296 
+	size < 16r100000000
 	    ifTrue: 
 		[self writeStream nextPut: MpConstants map32.
 		^MpPortableUtil default writeUint32: size to: self writeStream].
@@ -675,12 +675,12 @@ Object subclass: MpEncoder [
 
     writeRawBytesSize: size [
 	<category: 'writing-helper'>
-	size < 16 ifTrue: [^self writeStream nextPut: (160 bitOr: size)].
-	size < 65536 
+	size < 16r10 ifTrue: [^self writeStream nextPut: (2r10100000 bitOr: size)].
+	size < 16r10000
 	    ifTrue: 
 		[self writeStream nextPut: MpConstants raw16.
 		^MpPortableUtil default writeUint16: size to: self writeStream].
-	size < 4294967296 
+	size < 16r100000000
 	    ifTrue: 
 		[self writeStream nextPut: MpConstants raw32.
 		^MpPortableUtil default writeUint32: size to: self writeStream].
