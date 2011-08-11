@@ -1,0 +1,14 @@
+<package>
+  <name>MessagePack</name>
+  <test>
+    <prereq>MessagePack</prereq>
+    <prereq>SUnit</prereq>
+    <sunit>MpPackUnpackTestCase</sunit>
+    <filein>MessagePackTest.st</filein>
+  </test>
+  <filein>MessagePack-Core.st</filein>
+  <filein>MessagePack-GST-Core.st</filein>
+  <file>MessagePack-Core.st</file>
+  <file>MessagePack-GST-Core.st</file>
+  <file>MessagePackTest.st</file>
+</package>
