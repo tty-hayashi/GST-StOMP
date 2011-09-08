@@ -1,0 +1,17 @@
+<package>
+  <name>Stomp</name>
+  <test>
+    <prereq>MessagePack</prereq>
+    <prereq>SUnit</prereq>
+    <sunit>StompCustomSerializationTestCase StompNewFailedTestCase StompReadWriteTestCase StompReaderTestCase StompShapeChangerTestCase StompWriterTestCase</sunit>
+    <filein>StompTest-Core.st</filein>
+    <filein>StompTest-GST-Core.st</filein>
+  </test>
+  <prereq>MessagePack</prereq>
+  <filein>Stomp-Core.st</filein>
+  <filein>Stomp-GST-Core.st</filein>
+  <file>Stomp-Core.st</file>
+  <file>Stomp-GST-Core.st</file>
+  <file>StompTest-Core.st</file>
+  <file>StompTest-GST-Core.st</file>
+</package>
