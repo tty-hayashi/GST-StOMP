@@ -11,13 +11,22 @@ MpEncodeTypeMapper subclass: MpGSTEncodeTypeMapper [
 
     MpGSTEncodeTypeMapper class >> defineDoubleActionTo: map [
 	<category: 'actions for primitives'>
-	map at: FloatD put: #writeDouble:
+	map at: FloatD put: #writeDouble:.
+	map at: FloatQ put: #writeDouble:.
     ]
 
-    defineFloatActionTo: map [
+    MpGSTEncodeTypeMapper class >> defineFloatActionTo: map [
 	"Suppose 32 bit float - Some dialect does not support it"
-	map at: FloatE put: #writeFloat:
+	map at: FloatE put: #writeFloat:.
     ]
+
+    MpEncodeTypeMapper class >> defineMapActionTo: map [
+	<category: 'actions for compounds'>
+	map at: Dictionary put: #writeMap:.
+	map at: IdentityDictionary put: #writeMap:.
+	map at: Namespace put: #writeMap:.
+    ]
+
 ]
 
 
@@ -33,6 +42,12 @@ MpPortableUtil subclass: MpGSTPortableUtil [
 	<category: 'class initialization'>
 	super initialize.
 	MpPortableUtil dialectSpecificClass: self
+    ]
+
+    MpGSTPortableUtil class >> dialectSpecificClass [
+	<category: 'factory'>
+	^DialectSpecificClass 
+	    ifNil: [DialectSpecificClass := self subclasses asArray at: 1]
     ]
 
     encodeTypeMapperClass [
@@ -139,6 +154,14 @@ MpPortableUtil subclass: MpGSTPortableUtil [
 		ifTrue: [self error: 'outside unsigned 64-bit integer range'].
 	stream nextPutInt64: value
     ]
+
+    signalException: anException [
+	<category: 'actions'>
+	| ret |
+	ret := anException signal.
+	^(ret == anException) ifTrue: [nil] ifFalse: [ret]
+    ]
+
 ]
 
 
@@ -177,7 +200,7 @@ Stream extend [
 
 	| newValue |
 	newValue := (FloatD new: 8).
-	1 to: 8 do: [:n | newValue at: n put: self next].
+	8 to: 1 by: -1 do: [:n | newValue at: n put: self next].
 	^newValue
     ]
 
@@ -188,23 +211,23 @@ Stream extend [
 	<category: 'binary I/O'>
 	| newValue |
 	newValue := (FloatE new: 4).
-	1 to: 4 do: [:n |newValue at: n put: self nextByte].
+	4 to: 1 by: -1 do: [:n |newValue at: n put: self nextByte].
 	^newValue
     ]
 
     nextBytes: n signed: signed [
-	"It's a clone code from FileDiscreptor class."
+	"It's a clone code from I18N.BigEndianFileStream class."
 	"Private - Get an integer out of the next anInteger bytes in the stream"
 
-	<category: 'private'>
-	| int msb |
+	<category: 'private - endianness switching'>
+	| int |
 	int := 0.
-	0 to: n * 8 - 16
-	    by: 8
-	    do: [:i | int := int + (self nextByte bitShift: i)].
-	msb := self nextByte.
-	(signed and: [msb > 127]) ifTrue: [msb := msb - 256].
-	^int + (msb bitShift: n * 8 - 8)
+	int := self nextByte.
+	(signed and: [int > 127]) ifTrue: [int := int - 256].
+	(n - 1) to: 1
+	    by: -1
+	    do: [:i | int := (int bitShift: 8) + self nextByte].
+	^int
     ]
 
     nextShort [
@@ -262,14 +285,7 @@ Stream extend [
 	<category: 'binary I/O'>
 	| d |
 	d := aDouble asFloatD.
-	self nextPutByte: (d at: 1).
-	self nextPutByte: (d at: 2).
-	self nextPutByte: (d at: 3).
-	self nextPutByte: (d at: 4).
-	self nextPutByte: (d at: 5).
-	self nextPutByte: (d at: 6).
-	self nextPutByte: (d at: 7).
-	self nextPutByte: (d at: 8)
+	8 to: 1 by: -1 do: [:i | self nextPutByte: (d at: i)].
     ]
 
     nextPutFloat: aFloat [
@@ -279,10 +295,7 @@ Stream extend [
 	<category: 'binary I/O'>
 	| f |
 	f := aFloat asFloatE.
-	self nextPutByte: (f at: 1).
-	self nextPutByte: (f at: 2).
-	self nextPutByte: (f at: 3).
-	self nextPutByte: (f at: 4)
+	4 to: 1 by: -1 do: [:i | self nextPutByte: (f at: i)].
     ]
 
     nextPutByte: anInteger [
@@ -299,16 +312,17 @@ Stream extend [
     ]
 
     nextPutBytes: n of: anInteger [
-	"It's a clone code from FileDiscreptor class."
-	"Private - Store the n least significant bytes of int in little-endian format"
+	"It's a clone code from I18N.BigEndianFileStream class."
+	"Private - Store the n least significant bytes of int in big-endian format"
 
-	<category: 'private'>
+	<category: 'private - endianness switching'>
 	| int |
-	int := anInteger.
-	n timesRepeat: 
-		[self nextPutByte: (int bitAnd: 255).
-		int := int bitShift: -8.
-		(int = 0 and: [anInteger < 0]) ifTrue: [int := 255]]
+	int := anInteger < 0 
+		    ifTrue: [anInteger + (1 bitShift: 8 * n)]
+		    ifFalse: [anInteger].
+	n to: 1
+	    by: -1
+	    do: [:i | self nextPutByte: ((int bitShift: ((i -1) * 8) negated) bitAnd: 255)]
     ]
 
     nextPutInt64: anInteger [

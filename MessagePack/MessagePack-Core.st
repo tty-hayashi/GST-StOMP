@@ -559,7 +559,7 @@ Object subclass: MpEncoder [
     writeInteger: anInteger [
 	<category: 'writing'>
 	(anInteger between: 0 and: 127) 
-	    ifTrue: [^self writePositiveFixNum: anInteger].
+	    ifTrue: [^self writePositiveFixNum: anInteger + 0].
 	(anInteger between: -32 and: -1) 
 	    ifTrue: [^self writeNegativeFixNum: anInteger].
 	anInteger >= 128 
@@ -799,7 +799,7 @@ Object subclass: MpPortableUtil [
     MpPortableUtil class >> dialectSpecificClass [
 	<category: 'factory'>
 	^DialectSpecificClass 
-	    ifNil: [DialectSpecificClass := self subclasses at: 1]
+	    ifNil: [DialectSpecificClass := self subclasses asArray at: 1]
     ]
 
     MpPortableUtil class >> dialectSpecificClass: aClass [
@@ -1284,6 +1284,7 @@ MpTypeMapper subclass: MpEncodeTypeMapper [
     writeObject: anObject ifNotApplied: aBlock [
 	<category: 'actions'>
 	| actionSelector |
+
 	actionMap ifNotNil: 
 		[:foo | 
 		actionSelector := self actionMap at: anObject class ifAbsent: [].
