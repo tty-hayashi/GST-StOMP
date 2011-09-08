@@ -2562,7 +2562,7 @@ StompTestCase subclass: StompWriterTestCase [
 	self should: [bytes = self recursiveArrayAnswerBytes]
     ]
 
-    gstIgnore_testWriteRunArray [
+    testWriteRunArray [
 	"self debug: #testWriteRunArray"
 
 	<category: 'tests'>

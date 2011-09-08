@@ -294,11 +294,11 @@ RunArray class extend [
 
 RunArray extend [
     runs [
-	^self map collect: [:e | e key]
+	^(self map collect: [:e | e key]) asArray
     ]
 
     values [
-	^self map collect: [:e | e value]
+	^(self map collect: [:e | e value]) asArray
     ]
 ]
 
